@@ -1319,11 +1319,18 @@ function doWave(){
 function doInteract(){
   if(mode==='drive'){exitSUV();return;}
   if(mode!=='walk')return;
+
   const {m,d}=nearestMission();
   if(m&&d<5){
-    if(m.type==='greet')doWave();else completeMission(m);
+    if(m.type==='greet'){
+      doWave();
+    } else {
+      completeMission(m);
+    }
     return;
   }
+
+  // fallback: if near the SUV, enter it
   if(Math.hypot(suv.pos.x-player.pos.x,suv.pos.z-player.pos.z)<5)enterSUV();
 }
 function enterSUV(){
@@ -1488,7 +1495,8 @@ function updateMissionUI(){
     marker.position.set(m.x,2.6+Math.sin(clock.elapsedTime*2.4)*0.3,m.z);
     marker.rotation.y+=0.03;
     if(d<5){
-      promptEl.textContent=(m.type==='greet'?interactLabel+' / SPACE — ':interactLabel+' — ')+m.title.charAt(0)+m.title.slice(1).toLowerCase();
+      const action = m.type==='greet' ? 'wave / greet' : 'complete';
+      promptEl.textContent=interactLabel+' — '+action+' · '+m.title.charAt(0)+m.title.slice(1).toLowerCase();
       promptEl.style.display='block';
     }else if(Math.hypot(suv.pos.x-player.pos.x,suv.pos.z-player.pos.z)<5){
       promptEl.textContent=interactLabel+' — Drive the Akim-mobile';
