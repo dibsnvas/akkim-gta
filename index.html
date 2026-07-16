@@ -1385,11 +1385,13 @@ function updatePlayer(dt,t){
   if(isTouch){ix=stick.dx;iz=-stick.dy;}
   // gamepad left stick override
   if(gpState.connected){
-    const lx=gpState.axes[0]||0, ly=gpState.axes[1]||0;
-    const dead=0.15;
-    const gix = Math.abs(lx)>dead ? lx : 0;
-    const giz = Math.abs(ly)>dead ? -ly : 0;
-    if(Math.hypot(gix,giz) > Math.hypot(ix,iz)) { ix = gix; iz = giz; }
+    // Left stick: X = strafe (screen-space), Y = forward/back
+    const lx = gpState.axes[0]||0, ly = gpState.axes[1]||0;
+    const dead = 0.15;
+    const gix = Math.abs(lx) > dead ? lx : 0;
+    const giz = Math.abs(ly) > dead ? -ly : 0; // invert Y so up is negative axis
+    // Use left stick for forward/back primarily; allow strafing too
+    ix = gix; iz = giz;
   }
   const mag=Math.hypot(ix,iz);
   const target=mag>0.05?(run?8.2:4.2)*Math.min(mag,1):0;
@@ -1419,12 +1421,13 @@ function updateSUV(dt){
   let steer=(keys.KeyA||keys.ArrowLeft?1:0)-(keys.KeyD||keys.ArrowRight?1:0)-(isTouch?stick.dx:0);
   // gamepad axes for driving (left stick)
   if(gpState.connected){
-    const lx=gpState.axes[0]||0, ly=gpState.axes[1]||0;
-    const dead=0.12;
-    const gpFwd = Math.abs(ly)>dead ? -ly : 0; // forward mapped to -axis1
-    const gpSteer = Math.abs(lx)>dead ? lx : 0;
-    if(Math.abs(gpFwd)>Math.abs(fwd)) fwd = gpFwd;
-    if(Math.abs(gpSteer)>Math.abs(steer)) steer = gpSteer;
+    // For driving: left stick Y -> throttle, right stick X -> steering
+    const lx = gpState.axes[0]||0, ly = gpState.axes[1]||0, rx = gpState.axes[2]||0;
+    const dead = 0.12;
+    const gpFwd = Math.abs(ly)>dead ? -ly : 0;
+    const gpSteer = Math.abs(rx)>dead ? rx : 0;
+    if(Math.abs(gpFwd) > Math.abs(fwd)) fwd = gpFwd;
+    if(Math.abs(gpSteer) > Math.abs(steer)) steer = gpSteer;
   }
   suv.speed+=fwd*9*dt;
   suv.speed*=Math.pow(0.35,dt);
@@ -1444,6 +1447,15 @@ function syncSUVMesh(){
 
 function updateCamera(dt,t){
   const driving=mode==='drive';
+  // gamepad right stick rotates camera/world
+  if(gpState.connected){
+    const rx = gpState.axes[2]||0, ry = gpState.axes[3]||0;
+    const dead = 0.12;
+    const sensYaw = 0.045; // horizontal sensitivity
+    const sensPitch = 0.03; // vertical sensitivity
+    if(Math.abs(rx) > dead) camYaw = camYaw - rx * sensYaw;
+    if(Math.abs(ry) > dead) camPitch = clamp(camPitch + ry * sensPitch, -0.08, 1.05);
+  }
   const targetPos=driving?suv.pos:player.pos;
   if(driving)camYaw=lerpAngle(camYaw,suv.yaw,Math.min(1,1.8*dt));
   const dist=driving?11:6.4;
