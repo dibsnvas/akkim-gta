@@ -1288,9 +1288,9 @@ function pollGamepads(){
   // button down events (edge detect)
   for(let i=0;i<gpState.buttons.length;i++){
     if(gpState.buttons[i] && !gpState.prevButtons[i]){
-      // A (0) -> wave / start, B (1) -> interact, START (9) -> toggle or start
+      // A (0) -> wave / start, B/X (1/2) -> interact, START (9) -> toggle or start
       if(i===0){ if(mode==='title') startGame(); else if(mode==='walk') doWave(); }
-      else if(i===1){ doInteract(); }
+      else if(i===1 || i===2){ doInteract(); }
       else if(i===9){ if(mode==='title') startGame(); else toggleMute(); }
     }
   }
@@ -1379,7 +1379,7 @@ const clock=new THREE.Clock();
 let walkPhase=0,greetCD=0;
 
 function updatePlayer(dt,t){
-  const run=keys.ShiftLeft||keys.ShiftRight||(isTouch&&Math.hypot(stick.dx,stick.dy)>0.85);
+  const run=keys.ShiftLeft||keys.ShiftRight||(isTouch&&Math.hypot(stick.dx,stick.dy)>0.85)||(gpState.connected&&gpState.buttons[4]);
   let ix=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
   let iz=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   if(isTouch){ix=stick.dx;iz=-stick.dy;}
@@ -1475,8 +1475,9 @@ function updateCamera(dt,t){
 }
 
 function updateMissionUI(){
+  const interactLabel=(gpState.connected?'X':'E');
   if(mode==='drive'){
-    objectiveEl.textContent='🚙 Cruising the avenues — E to step out';
+    objectiveEl.textContent='🚙 Cruising the avenues — '+interactLabel+' to step out';
     promptEl.style.display='none';
     return;
   }
@@ -1487,17 +1488,17 @@ function updateMissionUI(){
     marker.position.set(m.x,2.6+Math.sin(clock.elapsedTime*2.4)*0.3,m.z);
     marker.rotation.y+=0.03;
     if(d<5){
-      promptEl.textContent=(m.type==='greet'?'E / SPACE — ':'E — ')+m.title.charAt(0)+m.title.slice(1).toLowerCase();
+      promptEl.textContent=(m.type==='greet'?interactLabel+' / SPACE — ':interactLabel+' — ')+m.title.charAt(0)+m.title.slice(1).toLowerCase();
       promptEl.style.display='block';
     }else if(Math.hypot(suv.pos.x-player.pos.x,suv.pos.z-player.pos.z)<5){
-      promptEl.textContent='E — Drive the Akim-mobile';
+      promptEl.textContent=interactLabel+' — Drive the Akim-mobile';
       promptEl.style.display='block';
     }else promptEl.style.display='none';
   }else{
     marker.visible=false;
     objectiveEl.textContent='✓ All civic duties complete — patrol the city and greet your citizens (SPACE)';
     if(Math.hypot(suv.pos.x-player.pos.x,suv.pos.z-player.pos.z)<5){
-      promptEl.textContent='E — Drive the Akim-mobile';promptEl.style.display='block';
+      promptEl.textContent=interactLabel+' — Drive the Akim-mobile';promptEl.style.display='block';
     }else promptEl.style.display='none';
   }
 }
