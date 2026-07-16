@@ -1288,9 +1288,9 @@ function pollGamepads(){
   // button down events (edge detect)
   for(let i=0;i<gpState.buttons.length;i++){
     if(gpState.buttons[i] && !gpState.prevButtons[i]){
-      // A (0) -> wave / start, B/X (1/2) -> interact, START (9) -> toggle or start
+      // A (0) -> wave / start, □/X (2) -> interact, START (9) -> toggle or start
       if(i===0){ if(mode==='title') startGame(); else if(mode==='walk') doWave(); }
-      else if(i===1 || i===2){ doInteract(); }
+      else if(i===2){ doInteract(); }
       else if(i===9){ if(mode==='title') startGame(); else toggleMute(); }
     }
   }
@@ -1482,7 +1482,7 @@ function updateCamera(dt,t){
 }
 
 function updateMissionUI(){
-  const interactLabel=(gpState.connected?'X':'E');
+  const interactLabel=(gpState.connected?'□':'E');
   if(mode==='drive'){
     objectiveEl.textContent='🚙 Cruising the avenues — '+interactLabel+' to step out';
     promptEl.style.display='none';
