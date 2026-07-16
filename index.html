@@ -1426,15 +1426,14 @@ function updatePlayer(dt,t){
 function updateSUV(dt){
   let fwd=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)+(isTouch?-stick.dy:0);
   let steer=(keys.KeyA||keys.ArrowLeft?1:0)-(keys.KeyD||keys.ArrowRight?1:0)-(isTouch?stick.dx:0);
-  // gamepad axes for driving (left stick)
+  // gamepad controls for driving
   if(gpState.connected){
-    // For driving: left stick Y -> throttle, right stick X -> steering
-    const lx = gpState.axes[0]||0, ly = gpState.axes[1]||0, rx = gpState.axes[2]||0;
+    const rx = gpState.axes[2]||0;
     const dead = 0.12;
-    const gpFwd = Math.abs(ly)>dead ? -ly : 0;
     const gpSteer = Math.abs(rx)>dead ? rx : 0;
-    if(Math.abs(gpFwd) > Math.abs(fwd)) fwd = gpFwd;
+    const gpThrottle = gpState.buttons[4] ? 1 : 0; // L1 => gas
     if(Math.abs(gpSteer) > Math.abs(steer)) steer = gpSteer;
+    if(Math.abs(gpThrottle) > Math.abs(fwd)) fwd = gpThrottle;
   }
   suv.speed+=fwd*9*dt;
   suv.speed*=Math.pow(0.35,dt);
